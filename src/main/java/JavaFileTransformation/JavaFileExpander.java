@@ -28,15 +28,26 @@ public class JavaFileExpander {
     private List<String> parseCompressedIntoWords(String compressed) {
         List<String> result = new ArrayList<>();
         List<String> uniques = getUniquesFromCompressed(compressed);
-
         char[] chars = compressed.toCharArray();
         for (int i = 0; i < chars.length; i++) {
             String s = String.valueOf(chars[i]);
             if (keywordLookup.containsValue(s)) {
                 result.add(getKeyByValue(keywordLookup, s));
-            } else if (uniques.contains(s)) {
-
+            } else if (Character.isDigit(chars[i])) {
+                StringBuilder b = new StringBuilder();
+                b.append(chars[i]);
+                int j = i + 1;
+                while (Character.isDigit(chars[j])) {
+                    b.append(chars[j]);
+                    j++;
+                }
+                result.add(uniques.get(Integer.parseInt(b.toString())));
+            } else if (s.equals("{")) {
+                result.add("\n");
+            } else {
+                result.add(s);
             }
+            result.add(" ");
         }
 
         return result;

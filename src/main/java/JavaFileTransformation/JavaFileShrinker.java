@@ -70,11 +70,4 @@ public class JavaFileShrinker {
         result.add("<" + String.join("|", uniques) + ">");
         return result;
     }
-
-    public static void main(String[] args) {
-        JavaFileShrinker shrinker = new JavaFileShrinker();
-        shrinker.setTargetFile("src/main/java/JavaFileTransformation/JavaFileShrinker.java");
-        List<String> s = shrinker.handleWordList(shrinker.parseFileIntoWords());
-        System.out.println(String.join("", s));
-    }
 }
