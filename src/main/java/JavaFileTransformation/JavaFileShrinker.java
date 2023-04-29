@@ -7,43 +7,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static JavaFileTransformation.LookupTableReader.readKeywordLookupTableIntoMap;
+
 public class JavaFileShrinker {
     private File targetFile;
     private HashMap<String, String> keywordLookup;
 
     public JavaFileShrinker() {
         this.keywordLookup = new HashMap<>();
-        readKeywordLookupTableIntoMap();
-    }
-
-    private void readKeywordLookupTableIntoMap() {
-        File table = new File("KeywordTable.txt");
-        List<String> lines;
-        try {
-            lines = Files.readAllLines(table.toPath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        for (String s : lines) {
-            StringBuilder accumulator = new StringBuilder();
-            String keyword = null;
-            String symbol = null;
-            boolean keywordFound = false;
-            for (char c : s.toCharArray()) {
-                if (Character.isAlphabetic(c)) {
-                    if (keywordFound) {
-                        symbol = String.valueOf(c);
-                        break;
-                    } else {
-                        accumulator.append(c);
-                    }
-                } else {
-                    keyword = accumulator.toString();
-                    keywordFound = true;
-                }
-            }
-            keywordLookup.put(keyword, symbol);
-        }
+        readKeywordLookupTableIntoMap("KeywordTable.txt");
     }
 
     public boolean setTargetFile(String targetURL) {
