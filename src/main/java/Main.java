@@ -6,6 +6,7 @@ public class Main {
         JavaFileShrinker shrinker = new JavaFileShrinker();
         JavaFileExpander expander = new JavaFileExpander();
         shrinker.setTargetFile("src/main/java/JavaFileTransformation/JavaFileShrinker.java");
+        System.out.println(String.join("", shrinker.shrink()));
         expander.setTargetFile("Output.java");
         expander.writeCompressedToFile(String.join("", shrinker.shrink()));
     }
