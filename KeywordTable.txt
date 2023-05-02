@@ -25,7 +25,6 @@ try============"y"
 catch=========="C"
 throw=========="O"
 
-abstract======="B"
 class=========="c"
 interface======"n"
 enum==========="m"

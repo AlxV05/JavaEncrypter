@@ -9,17 +9,23 @@ import static JavaFileTransformation.LookupTableReader.readKeywordLookupTableInt
 
 public class JavaFileExpander {
     private File targetFile;
-    private HashMap<String, String> keywordLookup;
+    private final HashMap<String, String> keywordLookup;
 
     public JavaFileExpander() {
-        this.keywordLookup = new HashMap<>();
-        readKeywordLookupTableIntoMap("KeywordTable.txt");
+        this.keywordLookup = readKeywordLookupTableIntoMap("KeywordTable.txt");
+    }
+
+    public void setTargetFile(String path) {
+        targetFile = new File(path);
     }
 
     public void writeCompressedToFile(String compressed) {
         try {
             FileWriter writer = new FileWriter(targetFile);
-
+            for (String s : parseCompressedIntoWords(compressed)) {
+                writer.write(s);
+            }
+            writer.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -29,7 +35,8 @@ public class JavaFileExpander {
         List<String> result = new ArrayList<>();
         List<String> uniques = getUniquesFromCompressed(compressed);
         char[] chars = compressed.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
+        int braceLayer = 0;
+        for (int i = 0; i < compressed.lastIndexOf('<'); i++) {
             String s = String.valueOf(chars[i]);
             if (keywordLookup.containsValue(s)) {
                 result.add(getKeyByValue(keywordLookup, s));
@@ -37,19 +44,24 @@ public class JavaFileExpander {
                 StringBuilder b = new StringBuilder();
                 b.append(chars[i]);
                 int j = i + 1;
-                while (Character.isDigit(chars[j])) {
+                while (chars[j] != 'B') {
                     b.append(chars[j]);
                     j++;
                 }
+                i += b.length();
                 result.add(uniques.get(Integer.parseInt(b.toString())));
             } else if (s.equals("{")) {
-                result.add("\n");
-            } else {
+                braceLayer++;
+                result.add(s + "\n" + "\t".repeat(braceLayer));
+            } else if (s.equals("}")) {
+                braceLayer--;
+                result.add("\n" + "\t".repeat(braceLayer) + s + "\n" + "\t".repeat(braceLayer));
+            } else if (s.equals(";")) {
+                result.add(s + "\n" + "\t".repeat(braceLayer));
+            } else if (!s.equals("B")){
                 result.add(s);
             }
-            result.add(" ");
         }
-
         return result;
     }
 

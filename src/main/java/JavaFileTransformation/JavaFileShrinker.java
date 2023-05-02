@@ -1,8 +1,7 @@
 package JavaFileTransformation;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,19 +10,14 @@ import static JavaFileTransformation.LookupTableReader.readKeywordLookupTableInt
 
 public class JavaFileShrinker {
     private File targetFile;
-    private HashMap<String, String> keywordLookup;
+    private final HashMap<String, String> keywordLookup;
 
     public JavaFileShrinker() {
-        this.keywordLookup = new HashMap<>();
-        readKeywordLookupTableIntoMap("KeywordTable.txt");
+        this.keywordLookup = readKeywordLookupTableIntoMap("KeywordTable.txt");
     }
 
-    public boolean setTargetFile(String targetURL) {
-        if (Files.exists(Path.of(targetURL))) {
-            targetFile = new File(targetURL);
-            return true;
-        }
-        return false;
+    public void setTargetFile(String targetPath) {
+        targetFile = new File(targetPath);
     }
 
     private List<String> parseFileIntoWords() {
@@ -32,6 +26,7 @@ public class JavaFileShrinker {
             List<String> words = new ArrayList<>();
             StringBuilder word = new StringBuilder();
             int c;
+            boolean acceptingSpaces = false;
             while ((c = reader.read()) != -1) {
                 char ch = (char) c;
                 if (!Character.isAlphabetic(ch)) {
@@ -39,35 +34,48 @@ public class JavaFileShrinker {
                         words.add(word.toString());
                         word = new StringBuilder();
                     }
-                    if (ch != ' ' && ch != '\n') {
+                    if (ch == ' ') {
+                        if (acceptingSpaces) {
+                            words.add(String.valueOf(ch));
+                        }
+                    } else if (ch != '\n') {
+                        acceptingSpaces = true;
                         words.add(String.valueOf(ch));
+                    } else {
+                        acceptingSpaces = false;
                     }
                 } else {
+                    acceptingSpaces = true;
                     word.append(ch);
                 }
             }
+            reader.close();
             return words;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public List<String> handleWordList(List<String> words) {
+    private List<String> handleWordList(List<String> words) {
         List<String> result = new ArrayList<>();
         List<String> uniques = new ArrayList<>();
         for (String s : words) {
-            if (s.length() == 1) {
+            if (s.length() == 1 && !Character.isAlphabetic((s.charAt(0))) && !Character.isDigit(s.charAt(0))) {
                 result.add(s);
             } else if (keywordLookup.containsKey(s)) {
                 result.add(keywordLookup.get(s));
             } else if (uniques.contains(s)) {
-                result.add(String.valueOf(uniques.indexOf(s)));
+                result.add(uniques.indexOf(s) + "B");
             } else {
-                result.add(String.valueOf(uniques.size()));
+                result.add(uniques.size() + "B");
                 uniques.add(s);
             }
         }
         result.add("<" + String.join("|", uniques) + ">");
         return result;
+    }
+
+    public List<String> shrink() {
+        return handleWordList(parseFileIntoWords());
     }
 }
