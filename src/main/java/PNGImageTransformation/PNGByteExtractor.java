@@ -27,7 +27,7 @@ public class PNGByteExtractor {
             return 0;
         }
         outer:
-        for (int i = 0; i <= array.length - target.length; i++) {
+        for (int i = array.length - target.length; i >= 0; i--) {
             for (int j = 0; j < target.length; j++) {
                 if (array[i+j] != target[j]) {
                     continue outer;
